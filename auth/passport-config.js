@@ -2,22 +2,23 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const GitHubStrategy = require("passport-github").Strategy;
 const bcrypt = require("bcryptjs");
+const db = require("../models/queries");
 
 passport.use(
   new LocalStrategy(async (username, password, done) => {
     try {
-      const user = await db.getUserByName(username);
+      const user = await db.getUserByUsername(username);
       if(!user){
         return done(null, false, { message: "Username not found!" });
       }
 
       const match = await bcrypt.compare(password, user.password);
-      if (!match) {
+      if(!match){
         return done(null, false, { message: "Password is incorrect!" });
       }
 
       return done(null, user);
-    } catch (err) {
+    }catch(err){
       return done(err);
     }
   })
@@ -30,7 +31,7 @@ passport.use(new GitHubStrategy({
 },
     async(accessToken, refreshToken, profile, done) => {
         try{
-            let user = await User.findOrCreateByGithub(profile);
+            let user = await db.findOrCreateByGithub(profile);
             return done(null, user);
         }catch(err){
             return done(err);
@@ -45,7 +46,7 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async(id, done) => {
     try{
-        const user = await User.findById(id);
+        const user = await db.getUserById(Number(id));
         done(null, user);
     }catch{
         done(err, null);

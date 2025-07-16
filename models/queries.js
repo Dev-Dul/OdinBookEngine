@@ -52,7 +52,7 @@ async function getUserById(userId){
 async function getUserByUsername(username){
     return await prisma.user.findUnique({
         where: { username: username },
-    })
+    });
 }
 
 async function addNewFriend(ownerId, friendId){
