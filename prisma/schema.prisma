@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Status {
+  PENDING
+  REJECTED
+  ACCEPTED
+}
+
+model User {
+  id             Int     @id @default(autoincrement())
+  username       String? @unique
+  email          String? @unique
+  password       String?
+  githubId       String? @unique
+  githubUsername String?
+  avatarUrl      String?
+
+  createdAt   DateTime  @default(now())
+  posts       Post[]
+  likes       Like[]
+  friendships Friend[]  @relation("friendships")
+  friends     Friend[]  @relation("friends")
+  Comment     Comment[]
+}
+
+model Friend {
+  id       Int      @id @default(autoincrement())
+  owner    User     @relation("friendships", fields: [ownerId], references: [id])
+  ownerId  Int
+  friend   User     @relation("friends", fields: [friendId], references: [id])
+  friendId Int
+  created  DateTime @default(now())
+  status   Status?  @default(PENDING)
+}
+
+model Post {
+  id       Int       @id @default(autoincrement())
+  text     String
+  picUrl   String?
+  author   User      @relation(fields: [authorId], references: [id])
+  authorId Int
+  created  DateTime  @default(now())
+  comments Comment[]
+  likes    Like[]
+}
+
+model Comment {
+  id       Int      @id @default(autoincrement())
+  text     String
+  author   User     @relation(fields: [authorId], references: [id])
+  authorId Int
+  post     Post     @relation(fields: [postId], references: [id])
+  postId   Int
+  created  DateTime @default(now())
+}
+
+model Like {
+  id      Int      @id @default(autoincrement())
+  user    User     @relation(fields: [userId], references: [id])
+  userId  Int
+  post    Post     @relation(fields: [postId], references: [id])
+  postId  Int
+  created DateTime @default(now())
+}
