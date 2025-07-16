@@ -39,8 +39,12 @@ async function getUserById(userId){
             posts: true,
             likes: true,
             comment: true,
-            friends: true,
-            friendships: true,
+            friends: {
+                friend: true,
+            },
+            friendships: {
+                owner: true,
+            },
         }
     });
 }
@@ -58,6 +62,47 @@ async function addNewFriend(ownerId, friendId){
             friend: { connect: { id: friendId } },
             status: 'PENDING',
         }
+    });
+}
+
+async function acceptFriendRequest(ownerId, friendId){
+    await prisma.friend.update({
+        where: {
+            ownerId: ownerId,
+            friendId: friendId
+        },
+
+        data: {
+            status: 'ACCEPTED',
+        }
+        
+    });
+}
+
+
+async function rejectFriendRequest(ownerId, friendId){
+    await prisma.friend.update({
+        where: {
+            ownerId: ownerId,
+            friendId: friendId
+        },
+
+        data: {
+            status: 'REJECTED',
+        }
+
+    });
+}
+
+
+async function removeFriend(ownerId, friendId){
+    await prisma.friend.delete({
+        where: {
+            ownerId_friendId: {
+                ownerId: ownerId,
+                friendId: friendId
+            }
+        },
     });
 }
 
@@ -143,6 +188,9 @@ module.exports = {
     getAllPosts,
     addNewFriend,
     fetchFriend,
+    removeFriend,
+    acceptFriendRequest,
+    rejectFriendRequest,
     createNewPost,
     createNewComment,
     createNewLike,

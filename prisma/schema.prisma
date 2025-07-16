@@ -45,6 +45,8 @@ model Friend {
   friendId Int
   created  DateTime @default(now())
   status   Status?  @default(PENDING)
+
+  @@unique([ownerId, friendId])
 }
 
 model Post {
