@@ -75,4 +75,6 @@ model Like {
   post    Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId  Int
   created DateTime @default(now())
+
+  @@unique([userId, postId])
 }

@@ -17,7 +17,7 @@ async function createNewUserLocal(req, res){
 }
 
 async function getUserById(req, res){
-    const { userId } = req.body;
+    const { userId } = req.params;
     if(!userId) return res.status(400).json({ message: "Incomplete Credentials!" });
 
     try{
@@ -44,8 +44,8 @@ async function getUserByUsername(req, res){
 }
 
 
-module.exports = [
+module.exports = {
     getUserById,
     getUserByUsername,
     createNewUserLocal,
-]
+}

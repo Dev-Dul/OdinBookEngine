@@ -119,13 +119,25 @@ async function createNewLike(userId, postId){
     });
 }
 
+
+async function removeLike(userId, postId){
+    await prisma.like.delete({
+        where: { 
+            userId_postId:{
+                userId: userId,
+                postId: postId
+            }
+        }
+    });
+}
+
 async function deletePost(postId){
     await prisma.post.delete({
        where: { id: postId }
     });
 }
 
-module.exports = [
+module.exports = {
     fetchPost,
     getUserById,
     getAllPosts,
@@ -134,9 +146,10 @@ module.exports = [
     createNewPost,
     createNewComment,
     createNewLike,
+    removeLike,
     deletePost,
     deleteComment,
     createNewUserLocal,
     getUserByUsername,
     findOrCreateByGithub,
-]
+}
