@@ -1,5 +1,5 @@
 const { PrismaClient } = require("../generated/prisma/client");
-const prisma = PrismaClient();
+const prisma = new PrismaClient();
 
 
 async function createNewUserLocal(username, email, password){

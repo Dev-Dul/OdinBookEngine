@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require("express");
 const session = require("express-session");
+const { PrismaClient } = require("./generated/prisma/client");
 const { passport } = require("./auth/passport-config");
 const postRouter = require("./routes/postRouter");
 const gatesRouter = require("./routes/gatesRouter");
