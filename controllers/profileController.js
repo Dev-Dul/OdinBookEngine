@@ -1,6 +1,35 @@
 const db = require("../models/queries");
 
 
+async function updateProfile(req, res){
+    const { userId } = req.params;
+    const { username, email, bio } = req.body;
+    const { picUrl } = req.file;
+
+    if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
+    if(!userId || !username || !email) return res.status(400).json({ message: "Incomplete or missing Credentials!" });
+    
+    try{
+        if(bio){
+            if(picUrl){
+                await db.updateProfile(Number(userId), username, email, bio, picUrl);
+            }else{
+                await db.updateProfile(Number(userId), username, email, bio);
+            }
+        }else{
+            await db.updateProfile(Number(userId), username, email);
+        }
+    }catch(err){
+        res.status(500).json({ message: err.message });
+    }
+}
+
+async function hydrateUser(req, res){
+    if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
+
+    res.status(200).json({ success: true, user: req.user });
+}
+
 async function addNewFriend(req, res){
     const { userId } = req.params;
     const { friendId } = req.body;
@@ -64,8 +93,10 @@ async function removeFriend(req, res){
 }
 
 module.exports = {
+    hydrateUser,
     addNewFriend,
     removeFriend,
+    updateProfile,
     acceptFriendRequest,
     rejectFriendRequest,
 }

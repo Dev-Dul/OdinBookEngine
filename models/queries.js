@@ -55,6 +55,18 @@ async function getUserByUsername(username){
     });
 }
 
+async function updateProfile(userId, username, email, bio = null, picUrl = null){
+    await prisma.user.update({
+        where: { id: userId },
+        data: {
+            username: username,
+            email: email,
+            bio: bio,
+            avatarUrl: picUrl
+        }
+    })
+}
+
 async function addNewFriend(ownerId, friendId){
     await prisma.friend.create({
         data: {
@@ -196,6 +208,7 @@ module.exports = {
     createNewLike,
     removeLike,
     deletePost,
+    updateProfile,
     deleteComment,
     createNewUserLocal,
     getUserByUsername,
