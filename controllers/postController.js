@@ -3,7 +3,7 @@ const db = require("../models/queries");
 
 async function createNewPost(req, res){
     const { text, userId } = req.body;
-    const { picUrl } = req.file;
+    const picUrl  = req.file?.path;
     if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
     if(!text || !userId ) return res.status(400).json({ message: "Incomplete Credentials!" });
     

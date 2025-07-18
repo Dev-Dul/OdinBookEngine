@@ -4,15 +4,15 @@ const db = require("../models/queries");
 async function updateProfile(req, res){
     const { userId } = req.params;
     const { username, email, bio } = req.body;
-    const { picUrl } = req.file;
+    const profilePic  = req.file?.path;
 
     if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
     if(!userId || !username || !email) return res.status(400).json({ message: "Incomplete or missing Credentials!" });
     
     try{
         if(bio){
-            if(picUrl){
-                await db.updateProfile(Number(userId), username, email, bio, picUrl);
+            if(profilePic){
+                await db.updateProfile(Number(userId), username, email, bio, profilePic);
             }else{
                 await db.updateProfile(Number(userId), username, email, bio);
             }

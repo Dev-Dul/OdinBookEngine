@@ -1,7 +1,9 @@
 require('dotenv').config();
+const cors = require("cors");
 const express = require("express");
 const session = require("express-session");
 const { PrismaClient } = require("./generated/prisma/client");
+const { PrismaSessionStore } = require("@quixo3/prisma-session-store");
 const { passport } = require("./auth/passport-config");
 const postRouter = require("./routes/postRouter");
 const gatesRouter = require("./routes/gatesRouter");
@@ -9,8 +11,31 @@ const profileRouter = require("./routes/profileRouter");
 
 
 const app = express();
+app.set("trust proxy", 1);
+app.use(cors({
+    origin: process.env.ALLOWED_DOMAIN,
+    credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(
+  session({
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : undefined,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    },
+    secret: "dattebayo!",
+    resave: true,
+    saveUninitialized: false,
+    store: new PrismaSessionStore(new PrismaClient(), {
+      checkPeriod: 2 * 60 * 1000,
+      dbRecordIdIsSessionId: true,
+      dbRecordIdFunction: undefined,
+    }),
+  })
+);
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -18,6 +43,7 @@ app.use(passport.session());
 app.use("/api/v1/", gatesRouter);
 app.use("/api/v1/posts/", postRouter);
 app.use("/api/v1/profiles/", profileRouter);
+
 
 
 app.use((err, req, res, next) => {
