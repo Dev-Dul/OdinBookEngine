@@ -4,8 +4,9 @@ const postController = require("../controllers/postController");
 const upload = require("../models/multer-config");
 
 // get routes
-postRouter.get("/", postController.getAllPosts);
+postRouter.get("/all", postController.getAllPosts);
 postRouter.get("/:postId", postController.getPost);
+postRouter.get("/search", postController.globalSearch);
 
 
 // post routes

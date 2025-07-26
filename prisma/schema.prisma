@@ -35,7 +35,7 @@ model User {
   likes       Like[]
   friendships Friend[]  @relation("friendships")
   friends     Friend[]  @relation("friends")
-  Comment     Comment[]
+  comments     Comment[]
 }
 
 model Friend {

@@ -3,7 +3,8 @@ const profileRouter = Router();
 const upload = require("../models/multer-config");
 const profileController = require("../controllers/profileController");
 
-profileRouter.get("/:userId/hydrate", profileController.hydrateUser);
+profileRouter.get("/all", profileController.getAllUsers);
+profileRouter.get("/hydrate", profileController.hydrateUser);
 
 profileRouter.post("/:userId/update", upload.single('profilePic'), profileController.updateProfile);
 profileRouter.post("/:userId/friends/new", profileController.addNewFriend);

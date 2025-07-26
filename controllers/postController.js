@@ -65,7 +65,8 @@ async function deleteComment(req, res) {
 
 
 async function createNewLike(req, res) {
-  const { userId, postId } = req.params;
+  const { userId } = req.body;
+  const { postId } = req.params;
   if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
   if(!userId || !postId) return res.satus(400).json({ message: "Incomplete Credentials!" });
 
@@ -106,6 +107,20 @@ async function  getPost(req, res){
      }
 }
 
+async function globalSearch(req, res){
+    const { query } = req.query;
+    if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
+    if(!query) return res.satus(400).json({ message: "Invalid query!" });
+
+
+     try{
+      const [users, posts, comments] = await db.globalSearch(query);
+       res.status(200).json({ success: true, users: users, posts: posts, comments: comments });
+     }catch(err){
+       res.status(500).json({ message: err.message });
+     }
+}
+
 async function getAllPosts(req, res){
     if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
     
@@ -123,6 +138,7 @@ module.exports = {
     deletePost,
     removeLike,
     getAllPosts,
+    globalSearch,
     deleteComment,
     createNewPost,
     createNewLike,

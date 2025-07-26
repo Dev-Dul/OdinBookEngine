@@ -24,20 +24,20 @@ passport.use(
   })
 );
 
-passport.use(new GitHubStrategy({
-    clientID: process.env.GITHUB_CLIENT_ID,
-    clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: "auth/github/callback"
-},
-    async(accessToken, refreshToken, profile, done) => {
-        try{
-            let user = await db.findOrCreateByGithub(profile);
-            return done(null, user);
-        }catch(err){
-            return done(err);
-        }
-    }
-));
+// passport.use(new GitHubStrategy({
+//     clientID: process.env.GITHUB_CLIENT_ID,
+//     clientSecret: process.env.GITHUB_CLIENT_SECRET,
+//     callbackURL: "auth/github/callback"
+// },
+//     async(accessToken, refreshToken, profile, done) => {
+//         try{
+//             let user = await db.findOrCreateByGithub(profile);
+//             return done(null, user);
+//         }catch(err){
+//             return done(err);
+//         }
+//     }
+// ));
 
 passport.serializeUser((user, done) => {
     done(null, user.id);
@@ -48,7 +48,7 @@ passport.deserializeUser(async(id, done) => {
     try{
         const user = await db.getUserById(Number(id));
         done(null, user);
-    }catch{
+    }catch(err){
         done(err, null);
     }
 })

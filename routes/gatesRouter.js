@@ -4,8 +4,9 @@ const gatesController = require("../controllers/gatesController");
 const { handleLogin } = require("../auth/passport-config");
 
 // get routes
+gatesRouter.get("/logout", gatesController.logOut);
 gatesRouter.get("/:userId", gatesController.getUserById);
-gatesRouter.get("/user/:userName", gatesController.getUserByusername);
+gatesRouter.get("/user/:userName", gatesController.getUserByUsername);
 
 // post routes
 gatesRouter.post("/login", handleLogin);

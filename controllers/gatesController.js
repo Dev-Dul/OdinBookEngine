@@ -7,7 +7,7 @@ async function createNewUserLocal(req, res){
     if(!username || !email || !password) return res.status(400).json({ message: "Incomplete Credentials" });
 
     try{
-        const hashedPassword = bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
         await db.createNewUserLocal(username, email, hashedPassword);
         res.status(200).json({ message: "User account created successfully!" });
     }catch(err){
@@ -44,7 +44,18 @@ async function getUserByUsername(req, res){
 }
 
 
+async function logOut(req, res, next){
+    if(!req.isAuthenticated()) return res.status(401).json({ message: "No User Logged In!" });
+
+    req.logout(err => {
+        if(err) return next(err);
+        res.status(200).json({ message: "User logged out successfully!."});
+    });
+}
+
+
 module.exports = {
+    logOut,
     getUserById,
     getUserByUsername,
     createNewUserLocal,

@@ -33,6 +33,7 @@ app.use(
       checkPeriod: 2 * 60 * 1000,
       dbRecordIdIsSessionId: true,
       dbRecordIdFunction: undefined,
+      ttl: 60 * 60 * 24 * 7,
     }),
   })
 );
@@ -53,4 +54,4 @@ app.use((err, req, res, next) => {
 
 
 const PORT = process.env.PORT || 3000;
-app.listen(() => console.log(`app is listening on port: ${PORT}`));
+app.listen(PORT, () => console.log(`app is listening on port: ${PORT}`));

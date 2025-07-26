@@ -38,12 +38,16 @@ async function getUserById(userId){
         include: {
             posts: true,
             likes: true,
-            comment: true,
+            comments: true,
             friends: {
-                friend: true,
+                include: {
+                    owner: true,
+                }
             },
             friendships: {
-                owner: true,
+                include:{
+                    friend: true,
+                }
             },
         }
     });
@@ -51,7 +55,22 @@ async function getUserById(userId){
 
 async function getUserByUsername(username){
     return await prisma.user.findUnique({
-        where: { username: username },
+      where: { username: username },
+      include: {
+        posts: true,
+        likes: true,
+        comments: true,
+        friends: {
+          include: {
+            owner: true,
+          },
+        },
+        friendships: {
+          include: {
+            friend: true,
+          },
+        },
+      },
     });
 }
 
@@ -124,6 +143,10 @@ async function fetchFriend(friendId){
     })
 }
 
+async function getAllUsers(){
+    return await prisma.user.findMany();
+}
+
 async function createNewPost(text, picUrl = null, authorId){
     await prisma.post.create({
         data: {
@@ -139,11 +162,43 @@ async function fetchPost(postId){
         where: { id: postId },
         include: {
             comment: {
-              author: true
+                include: {
+                    author: true
+                }
             },
             like: true,
         }
     });
+}
+
+async function globalSearch(query){
+    const search = query.trim();
+    const [users, posts, comments] = await promise.all([
+        prisma.user.findMany({
+            where: {
+                OR: [
+                    { email: { contains: search, mode: "insensitive" }},
+                    { username: { contains: search, mode: "insensitive" }},
+                ]
+            }
+        }),
+
+        prisma.post.findMany({
+            where: { text: { contains: search, mode: "insensitive" }},
+            include: { author: true }
+        }),
+
+        prisma.comment.findMany({
+            where: { text: { contains: search, mode: "insensitive" }},
+            include: { author: true }
+        }),    
+    ])
+
+    return {
+        users,
+        posts,
+        comments
+    }
 }
 
 async function getAllPosts(){
@@ -198,9 +253,11 @@ module.exports = {
     fetchPost,
     getUserById,
     getAllPosts,
+    getAllUsers,
     addNewFriend,
     fetchFriend,
     removeFriend,
+    globalSearch,
     acceptFriendRequest,
     rejectFriendRequest,
     createNewPost,

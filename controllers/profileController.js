@@ -25,7 +25,8 @@ async function updateProfile(req, res){
 }
 
 async function hydrateUser(req, res){
-    if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
+    if(!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
+    if(!req.session) return res.status(401).json({ message: "Expired" });
 
     res.status(200).json({ success: true, user: req.user });
 }
@@ -34,7 +35,7 @@ async function addNewFriend(req, res){
     const { userId } = req.params;
     const { friendId } = req.body;
 
-    if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
+    if(!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
     if(!userId || !friendId) return res.status(400).json({ message: "Incomplete or missing Credentials!" });
 
     try{
@@ -50,7 +51,7 @@ async function acceptFriendRequest(req, res){
     const { userId } = req.params;
     const { friendId } = req.body;
 
-    if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
+    if(!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
     if(!userId || !friendId) return res.status(400).json({ message: "Incomplete or missing Credentials!" });
 
     try{
@@ -66,7 +67,7 @@ async function rejectFriendRequest(req, res){
     const { userId } = req.params;
     const { friendId } = req.body;
 
-    if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
+    if(!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
     if(!userId || !friendId) return res.status(400).json({ message: "Incomplete or missing Credentials!" });
 
     try{
@@ -81,7 +82,7 @@ async function rejectFriendRequest(req, res){
 async function removeFriend(req, res){
     const { userId, friendId } = req.params;
 
-    if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
+    if(!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
     if(!userId || !friendId) return res.status(400).json({ message: "Incomplete or missing Credentials!" });
 
     try{
@@ -92,7 +93,23 @@ async function removeFriend(req, res){
     }
 }
 
+
+async function getAllUsers(req, res){
+    if(!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
+
+    try{
+        let users = await db.getAllUsers();
+        users = users.filter(user => user.id !== req.user.id);
+        console.log(users);
+        res.status(200).json({ success: true, users: users });
+    }catch(err){
+        res.status(500).json({ message: err.message });
+    }
+}
+
+
 module.exports = {
+    getAllUsers,
     hydrateUser,
     addNewFriend,
     removeFriend,
