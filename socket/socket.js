@@ -26,7 +26,6 @@ function setupSocket(server){
 
 
 function getIO(){
-    // console.log("io", io);
     return io;
 }
 

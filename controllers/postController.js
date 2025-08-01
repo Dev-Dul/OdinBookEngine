@@ -91,7 +91,7 @@ async function createNewLike(req, res) {
       io.emit("unlike", { postId: Number(postId), userId: Number(userId) });
     }
     
-    console.log("post id for like:", postId);
+    
     res.status(200).json({ success: true });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -114,7 +114,6 @@ async function  getPost(req, res){
 
 async function globalSearch(req, res){
     const { query } = req.query;
-    console.log("search route hit!");
     if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
     if(!query) return res.status(400).json({ message: "Invalid query!" });
 
