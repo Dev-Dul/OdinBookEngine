@@ -8,7 +8,8 @@ const { passport } = require("./auth/passport-config");
 const postRouter = require("./routes/postRouter");
 const gatesRouter = require("./routes/gatesRouter");
 const profileRouter = require("./routes/profileRouter");
-
+const { setupSocket } = require("./socket/socket");
+const http = require('http');
 
 const app = express();
 app.set("trust proxy", 1);
@@ -40,6 +41,8 @@ app.use(
 
 app.use(passport.initialize());
 app.use(passport.session());
+const server = http.createServer(app);
+setupSocket(server);
 
 app.use("/api/v1/", gatesRouter);
 app.use("/api/v1/posts/", postRouter);
@@ -54,4 +57,4 @@ app.use((err, req, res, next) => {
 
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`app is listening on port: ${PORT}`));
+server.listen(PORT, () => console.log(`server is listening on port: ${PORT}`));

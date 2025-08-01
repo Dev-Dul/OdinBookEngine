@@ -5,6 +5,7 @@ const profileController = require("../controllers/profileController");
 
 profileRouter.get("/all", profileController.getAllUsers);
 profileRouter.get("/hydrate", profileController.hydrateUser);
+profileRouter.get("/:userId", profileController.getUser);
 
 profileRouter.post("/:userId/update", upload.single('profilePic'), profileController.updateProfile);
 profileRouter.post("/:userId/friends/new", profileController.addNewFriend);

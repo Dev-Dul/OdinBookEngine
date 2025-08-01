@@ -5,8 +5,8 @@ const upload = require("../models/multer-config");
 
 // get routes
 postRouter.get("/all", postController.getAllPosts);
-postRouter.get("/:postId", postController.getPost);
 postRouter.get("/search", postController.globalSearch);
+postRouter.get("/:postId", postController.getPost);
 
 
 // post routes
@@ -15,6 +15,5 @@ postRouter.post("/:postId/comments/new", postController.createNewComment);
 postRouter.post("/:postId/likes/new", postController.createNewLike);
 postRouter.post("/:postId/delete", postController.deletePost);
 postRouter.post("/:postId/comments/:commentId/delete", postController.deleteComment);
-postRouter.post("/:postId/likes/remove", postController.removeLike);
 
 module.exports = postRouter;

@@ -36,9 +36,23 @@ async function getUserById(userId){
     return await prisma.user.findUnique({
         where: { id: userId },
         include: {
-            posts: true,
+            posts: {
+                include: {
+                    author: true,
+                    likes: true,
+                    comments: {
+                        include: {
+                            author: true
+                        }
+                    },
+                }
+            },
             likes: true,
-            comments: true,
+            comments: {
+                include: {
+                    author: true,
+                }
+            },
             friends: {
                 include: {
                     owner: true,
@@ -57,9 +71,23 @@ async function getUserByUsername(username){
     return await prisma.user.findUnique({
       where: { username: username },
       include: {
-        posts: true,
+        posts: {
+            include: {
+                author: true,
+                likes: true,
+                comments: {
+                    include: {
+                        author: true
+                    }
+                },
+            }
+        },
         likes: true,
-        comments: true,
+        comments: {
+            include: {
+                author: true,
+            }
+        },
         friends: {
           include: {
             owner: true,
@@ -147,7 +175,7 @@ async function getAllUsers(){
     return await prisma.user.findMany();
 }
 
-async function createNewPost(text, picUrl = null, authorId){
+async function createNewPost(text, authorId, picUrl = null){
     await prisma.post.create({
         data: {
             text: text,
@@ -161,19 +189,20 @@ async function fetchPost(postId){
     return await prisma.post.findUnique({
         where: { id: postId },
         include: {
-            comment: {
+            comments: {
                 include: {
                     author: true
                 }
             },
-            like: true,
+            author: true,
+            likes: true,
         }
     });
 }
 
 async function globalSearch(query){
     const search = query.trim();
-    const [users, posts, comments] = await promise.all([
+    const [users, posts, comments] = await Promise.all([
         prisma.user.findMany({
             where: {
                 OR: [
@@ -185,7 +214,15 @@ async function globalSearch(query){
 
         prisma.post.findMany({
             where: { text: { contains: search, mode: "insensitive" }},
-            include: { author: true }
+            include: {
+                author: true, 
+                likes: true, 
+                comments: {
+                    include: {
+                        author: true
+                    }
+                }, 
+            }
         }),
 
         prisma.comment.findMany({
@@ -202,46 +239,78 @@ async function globalSearch(query){
 }
 
 async function getAllPosts(){
-    return await prisma.post.findMany();
+    return await prisma.post.findMany({
+      include: {
+        comments: {
+          include: {
+            author: true,
+          },
+        },
+        author: true,
+        likes: true,
+      },
+    });
 }
 
 async function createNewComment(text, authorId, postId){
-    await prisma.comment.create({
+    return await prisma.comment.create({
         data: {
             text: text,
             author: { connect: { id: authorId } },
             post: { connect: { id: postId } }
+        },
+
+        include: {
+            author: true,
         }
     })
 }
 
 
 async function deleteComment(commentId){
-    await prisma.comment.delete({
+    return await prisma.comment.delete({
         where: { id: commentId }
     });
 }
 
-async function createNewLike(userId, postId){
-    await prisma.like.create({
-        data: {
-            user: { connect: { id: userId } },
-            post: { connect: { id: postId } },
-        }
-    });
-}
+async function toggleLike(userId, postId) {
+  const existingLike = await prisma.like.findUnique({
+    where: {
+      userId_postId: {
+        userId,
+        postId,
+      },
+    },
+  });
 
-
-async function removeLike(userId, postId){
+  if(existingLike){
     await prisma.like.delete({
-        where: { 
-            userId_postId:{
-                userId: userId,
-                postId: postId
-            }
-        }
+      where: {
+        userId_postId: {
+          userId,
+          postId,
+        },
+      },
+    });
+    return { liked: false };
+  } else {
+    await prisma.like.create({
+      data: {
+        user: { connect: { id: userId } },
+        post: { connect: { id: postId } },
+      },
+    });
+    return { liked: true };
+  }
+}
+
+
+async function getCommentCount(postId){
+    return await prisma.comment.findMany({
+        where: { postId: postId }
     });
 }
+
 
 async function deletePost(postId){
     await prisma.post.delete({
@@ -262,11 +331,11 @@ module.exports = {
     rejectFriendRequest,
     createNewPost,
     createNewComment,
-    createNewLike,
-    removeLike,
+    toggleLike,
     deletePost,
     updateProfile,
     deleteComment,
+    getCommentCount,
     createNewUserLocal,
     getUserByUsername,
     findOrCreateByGithub,

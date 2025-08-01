@@ -1,7 +1,9 @@
 const db = require("../models/queries");
+const { getIO } = require("../socket/socket");
 
 
 async function createNewPost(req, res){
+    const io = getIO();
     const { text, userId } = req.body;
     const picUrl  = req.file?.path;
     if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
@@ -9,9 +11,11 @@ async function createNewPost(req, res){
     
     try{
         if(picUrl){
-            await db.createNewPost(text, picUrl, Number(userId));
+            const post = await db.createNewPost(text, Number(userId), picUrl);
+            io.emit('new post', post);
         }else{
-            await db.createNewPost(text, Number(userId));
+            const post = await db.createNewPost(text, Number(userId));
+            io.emit('new post', post);
         }
 
         res.status(200).json({ message: "Post created successfully! "});
@@ -22,13 +26,15 @@ async function createNewPost(req, res){
 
 
 async function createNewComment(req, res){
+    const io = getIO();
     const { text, userId, postId } = req.body;
     if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
     if(!text || !userId || !postId) return res.status(400).json({ message: "Incomplete Credentials!" });
     
     try{
-        await db.createNewComment(text, Number(userId), Number(postId));
-        res.status(200).json({ message: "Comment created successfully! "});
+        const comment = await db.createNewComment(text, Number(userId), Number(postId));
+        io.emit("new comment", { postId: Number(postId), comment: comment });
+        res.status(200).json({ message: "Comment created successfully!", comment: comment });;
     }catch(err){
         res.status(500).json({ message: err.message });
     }
@@ -36,12 +42,14 @@ async function createNewComment(req, res){
 
 
 async function deletePost(req, res){
+    const io = getIO();
     const { postId } = req.params;
     if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
     if(!postId) return res.status(400).json({ message: "Incomplete Credentials!" });
 
     try {
       await db.deletePost(Number(postId));
+      io.emit("delete post", Number(postId));
       res.status(200).json({ message: "Post deleted successfully! " });
     } catch (err) {
       res.status(500).json({ message: err.message });
@@ -50,13 +58,15 @@ async function deletePost(req, res){
 }
 
 async function deleteComment(req, res) {
-  const { commentId } = req.params;
+  const io = getIO();
+  const { commentId, postId } = req.params;
   if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
-  if(!commentId) return res.satus(400).json({ message: "Incomplete Credentials!" });
+  if(!commentId || !postId) return res.status(400).json({ message: "Incomplete Credentials!" });
 
   try{
     await db.deleteComment(Number(commentId));
-    res.status(200).json({ message: "Comment deleted successfully! " });
+    io.emit("delete comment", { postId: Number(postId), commentId: Number(commentId) });
+    res.status(200).json({ message: "Comment deleted successfully!" });
   }catch(err){
     res.status(500).json({ message: err.message });
   }
@@ -65,39 +75,34 @@ async function deleteComment(req, res) {
 
 
 async function createNewLike(req, res) {
+  const io = getIO();
   const { userId } = req.body;
   const { postId } = req.params;
-  if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
-  if(!userId || !postId) return res.satus(400).json({ message: "Incomplete Credentials!" });
 
-  try{
-    await db.createNewLike(Number(userId), Number(postId));
+  if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
+  if(!userId || !postId) return res.status(400).json({ message: "Incomplete Credentials!" });
+
+  try {
+    const { liked } = await db.toggleLike(Number(userId), Number(postId));
+
+    if(liked){
+      io.emit("like", { postId: Number(postId), userId: Number(userId) });
+    }else{
+      io.emit("unlike", { postId: Number(postId), userId: Number(userId) });
+    }
+    
+    console.log("post id for like:", postId);
     res.status(200).json({ success: true });
-  }catch(err){
+  } catch (err) {
     res.status(500).json({ message: err.message });
   }
-
 }
 
-async function removeLike(req, res) {
-  const { userId } = req.body;
-  const { postId } = req.params;
-  if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
-  if(!userId || !postId) return res.satus(400).json({ message: "Incomplete or Missing Credentials!" });
-
-  try{
-    await db.removeLike(Number(userId), Number(postId));
-    res.status(200).json({ success: true });
-  }catch(err){
-    res.status(500).json({ message: err.message });
-  }
-
-}
 
 async function  getPost(req, res){
     const { postId } = req.params;
     if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
-    if(!postId) return res.satus(400).json({ message: "Incomplete Credentials!" });
+    if(!postId) return res.status(400).json({ message: "Incomplete Credentials!" });
 
      try{
        const post = await db.fetchPost(Number(postId));
@@ -109,13 +114,14 @@ async function  getPost(req, res){
 
 async function globalSearch(req, res){
     const { query } = req.query;
+    console.log("search route hit!");
     if(!req.isAuthenticated()) return res.status(403).json({ message: "Unauthorized" });
-    if(!query) return res.satus(400).json({ message: "Invalid query!" });
+    if(!query) return res.status(400).json({ message: "Invalid query!" });
 
 
      try{
-      const [users, posts, comments] = await db.globalSearch(query);
-       res.status(200).json({ success: true, users: users, posts: posts, comments: comments });
+      const { users, posts, comments } = await db.globalSearch(query);
+       res.status(200).json({ message: "data fetch complete!", users: users, posts: posts, comments: comments });
      }catch(err){
        res.status(500).json({ message: err.message });
      }
@@ -136,7 +142,6 @@ async function getAllPosts(req, res){
 module.exports = {
     getPost,
     deletePost,
-    removeLike,
     getAllPosts,
     globalSearch,
     deleteComment,

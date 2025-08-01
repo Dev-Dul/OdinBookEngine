@@ -1,4 +1,5 @@
 const db = require("../models/queries");
+const { getIO } = require("../socket/socket");
 
 
 async function updateProfile(req, res){
@@ -19,6 +20,8 @@ async function updateProfile(req, res){
         }else{
             await db.updateProfile(Number(userId), username, email);
         }
+        res.status(200).json({ message: "Profile updated successfully!", user: req.user });  
+
     }catch(err){
         res.status(500).json({ message: err.message });
     }
@@ -32,6 +35,7 @@ async function hydrateUser(req, res){
 }
 
 async function addNewFriend(req, res){
+    const io = getIO();
     const { userId } = req.params;
     const { friendId } = req.body;
 
@@ -40,6 +44,7 @@ async function addNewFriend(req, res){
 
     try{
         await db.addNewFriend(Number(userId), Number(friendId));
+        io.emit('friend');
         res.status(200).json({ message: "New friend request sent!" });
     }catch(err){
         res.status(500).json({ message: err.message });
@@ -48,6 +53,7 @@ async function addNewFriend(req, res){
 
 
 async function acceptFriendRequest(req, res){
+    const io = getIO();
     const { userId } = req.params;
     const { friendId } = req.body;
 
@@ -56,6 +62,7 @@ async function acceptFriendRequest(req, res){
 
     try{
         await db.acceptFriendRequest(Number(userId), Number(friendId));
+        io.emit('friend');
         res.status(200).json({ message: "Friend request accepted!" });
     }catch(err){
         res.status(500).json({ message: err.message });
@@ -64,6 +71,7 @@ async function acceptFriendRequest(req, res){
 
 
 async function rejectFriendRequest(req, res){
+    const io = getIO();
     const { userId } = req.params;
     const { friendId } = req.body;
 
@@ -72,6 +80,8 @@ async function rejectFriendRequest(req, res){
 
     try{
         await db.rejectFriendRequest(Number(userId), Number(friendId));
+        io.emit("friend");
+
         res.status(200).json({ message: "Friend request rejected!" });
     }catch(err){
         res.status(500).json({ message: err.message });
@@ -80,6 +90,7 @@ async function rejectFriendRequest(req, res){
 
 
 async function removeFriend(req, res){
+    const io = getIO();
     const { userId, friendId } = req.params;
 
     if(!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
@@ -87,6 +98,7 @@ async function removeFriend(req, res){
 
     try{
         await db.removeFriend(Number(userId), Number(friendId));
+        io.emit('friend');
         res.status(200).json({ message: "Friend removed!" });
     }catch(err){
         res.status(500).json({ message: err.message });
@@ -94,13 +106,25 @@ async function removeFriend(req, res){
 }
 
 
+async function getUser(req, res){
+    const { userId } = req.params;
+    if(!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
+    if(!userId) return res.status(400).json({ message: "Incomplete or missing Credentials!" });
+
+    try{
+        const user = await db.getUserById(Number(userId));
+        res.status(200).json({ success: true, user: user });
+    }catch(err){
+        res.status(500).json({ message: err.message });
+    }
+}
+
 async function getAllUsers(req, res){
     if(!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
 
     try{
         let users = await db.getAllUsers();
         users = users.filter(user => user.id !== req.user.id);
-        console.log(users);
         res.status(200).json({ success: true, users: users });
     }catch(err){
         res.status(500).json({ message: err.message });
@@ -109,6 +133,7 @@ async function getAllUsers(req, res){
 
 
 module.exports = {
+    getUser,
     getAllUsers,
     hydrateUser,
     addNewFriend,
