@@ -26,8 +26,8 @@ model User {
   email          String? @unique
   bio            String?
   password       String?
-  githubId       String? @unique
-  githubUsername String?
+  googleId       String? @unique
+  googleName String?
   avatarUrl      String?
 
   createdAt   DateTime  @default(now())

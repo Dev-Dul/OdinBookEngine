@@ -15,6 +15,19 @@ async function createNewUserLocal(req, res){
     }
 
 }
+async function createNewUserLocal(req, res){
+    const { username, email, password } = req.body;
+    if(!username || !email || !password) return res.status(400).json({ message: "Incomplete Credentials" });
+
+    try{
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await db.createNewUserLocal(username, email, hashedPassword);
+        res.status(200).json({ message: "User account created successfully!" });
+    }catch(err){
+        res.status(500).json({ message: err.message });
+    }
+
+}
 
 async function getUserById(req, res){
     const { userId } = req.params;

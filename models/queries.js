@@ -12,25 +12,27 @@ async function createNewUserLocal(username, email, password){
     });
 }
 
-async function findOrCreateByGithub(profile){
-    const findUser = await prisma.user.findUnique({
-        where: { githubId: profile.githubId }
+async function findOrCreateByGoogle(profile) {
+  const findUser = await prisma.user.findUnique({
+    where: { googleId: profile.id },
+  });
+
+  if(!findUser) {
+    const user = await prisma.user.create({
+      data: {
+        googleId: profile.id,
+        googleName: profile.displayName,
+        avatarUrl: profile.photos?.[0]?.value,
+        email: profile.emails?.[0]?.value,
+      },
     });
 
-    if(!findUser){
-        const user = await prisma.user.create({
-            data: {
-                githubId: profile.githubId,
-                githubUsername: profile.githubUsername,
-                avatarUrl: profile.pic,
-            }
-        });
+    return user;
+  }
 
-        return user;
-    }
-
-    return findUser;
+  return findUser;
 }
+
 
 async function getUserById(userId){
     return await prisma.user.findUnique({
@@ -338,5 +340,5 @@ module.exports = {
     getCommentCount,
     createNewUserLocal,
     getUserByUsername,
-    findOrCreateByGithub,
+    findOrCreateByGoogle,
 }

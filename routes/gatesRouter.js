@@ -1,10 +1,12 @@
 const { Router } = require("express");
 const gatesRouter = Router();
 const gatesController = require("../controllers/gatesController");
-const { handleLogin } = require("../auth/passport-config");
+const { handleLogin, googleAuthCallback, googleAuthRedirect } = require("../auth/passport-config");
 
 // get routes
 gatesRouter.get("/logout", gatesController.logOut);
+gatesRouter.get("/auth/google", googleAuthRedirect);
+gatesRouter.get("/auth/google/callback", googleAuthCallback);
 gatesRouter.get("/:userId", gatesController.getUserById);
 gatesRouter.get("/user/:userName", gatesController.getUserByUsername);
 
