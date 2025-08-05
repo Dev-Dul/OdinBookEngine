@@ -31,7 +31,7 @@ async function hydrateUser(req, res){
     if(!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
     if(!req.session) return res.status(401).json({ message: "Expired" });
 
-    res.status(200).json({ success: true, user: req.user });
+    res.status(200).json({ message: "Success", user: req.user });
 }
 
 async function addNewFriend(req, res){

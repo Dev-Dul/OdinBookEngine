@@ -48,17 +48,19 @@ function googleAuthRedirect(req, res, next) {
 }
 
 function googleAuthCallback(req, res, next) {
-  passport.authenticate('google', (err, user, info) => {
-    if(err) return res.status(500).json({ message: err.message });
-    if(!user) return res.status(401).json({ message: "Authentication failed" });
+  passport.authenticate("google", (err, user, info) => {
+    if(err) return res.redirect(`${process.env.ALLOWED_DOMAIN}/login-failure`);
+    if(!user) return res.redirect(`${process.env.ALLOWED_DOMAIN}/login-failure`);
 
-    // Manually log in the user to create session
     req.login(user, (err) => {
-      if(err) return res.status(500).json({ message: err.message });
-      return res.status(200).json({ message: "Login successful", user: user });
+      if(err) return res.redirect(`${process.env.ALLOWED_DOMAIN}/login-failure`);
+
+      // ✅ redirect to frontend after session is set
+      return res.redirect(`${process.env.ALLOWED_DOMAIN}/auth-success`);
     });
   })(req, res, next);
 }
+
 
 
 passport.serializeUser((user, done) => {
